@@ -33,6 +33,7 @@ const BookDetailsModal = ({ open, handleClose, selectedBook, detailsLoading, mai
               <Typography variant="body1" sx={{ mb: 3, maxHeight: '200px', overflowY: 'auto', fontFamily: 'Cairo', lineHeight: 1.8, color: '#444' }}>
                 {selectedBook.description || "لا يوجد وصف متاح."}
               </Typography>
+              
               <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #eee', pt: 2 }}>
                 <Typography variant="body2" sx={{ fontFamily: 'Cairo' }}>عدد الصفحات: <b>{selectedBook.pages}</b></Typography>
                 <Button variant="contained" onClick={() => handleReadClick(selectedBook.pdf_path)} sx={{ bgcolor: mainColor, px: 4, fontFamily: 'Cairo', borderRadius: 2 }}>
