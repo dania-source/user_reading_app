@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from "react"; // أضفنا useState و useEffect
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Mainpage from "./screens/MainPage";
 import ProfilePage from "./screens/ProfilePage";
 import UserProfile from "./screens/UserProfile";
+import BookDetailsPage from "./screens/BookDetailsPage"; // 1. استيراد صفحة تفاصيل الكتاب الجديدة
 
 function App() {
-  // 1. تعريف حالة المستخدم (User State)
-  // بنحاول نقرأ البيانات من localStorage فوراً عشان ما تظهر شاشة تسجيل الدخول للحظة
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("user");
     return saved ? JSON.parse(saved) : null;
   });
 
-  // 2. تحديث الحالة في حال تغير الـ localStorage (اختياري لزيادة التأكيد)
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser && !user) {
@@ -21,22 +19,57 @@ function App() {
     }
   }, [user]);
 
+  // تعيين اللون الأساسي للتطبيق هنا ليمرر لكل الصفحات
+  const mainColor = "#541029";
+
+  // دالة قراءة الكتاب عند الضغط على زر القراءة
+  const handleReadClick = (pdfPath) => {
+    if (pdfPath) {
+      window.open(pdfPath, "_blank"); // يفتح رابط الـ PDF في نافذة جديدة
+    } else {
+      alert("عذراً، رابط الكتاب غير متاح حالياً.");
+    }
+  };
+
   return (
     <Router>
       <div className="App">
         <Routes>
-          {/* 3. نمرر user و setUser كـ props للصفحة الرئيسية عشان تستخدمهم في الـ Navbar */}
+          {/* نمرر user و setUser كـ props للصفحة الرئيسية */}
           <Route
             path="/"
-            element={<Mainpage user={user} setUser={setUser} />}
+            element={
+              <Mainpage user={user} setUser={setUser} mainColor={mainColor} />
+            }
           />
 
           <Route path="/user-profile/:userId" element={<UserProfile />} />
 
-          {/* 4. نمرر بيانات المستخدم لصفحة البروفايل أيضاً */}
+          {/* نمرر بيانات المستخدم لصفحة البروفايل أيضاً */}
           <Route
             path="/profile"
             element={<ProfilePage user={user} setUser={setUser} />}
+          />
+
+          {/* ⚠️ تعديل وإضافة مسارات صفحة تفاصيل الكتاب لتطابق الـ جمع والمفرد */}
+          <Route
+            path="/books/:id" // 👈 هذا المسار بالجمع ليطابق الانتقال من الاقتراحات (/books/3)
+            element={
+              <BookDetailsPage
+                mainColor={mainColor}
+                handleReadClick={handleReadClick}
+              />
+            }
+          />
+
+          <Route
+            path="/book/:id" // 👈 تركناه كمسار احتياطي في حال كان مستخدماً في مكان آخر بالمنصة
+            element={
+              <BookDetailsPage
+                mainColor={mainColor}
+                handleReadClick={handleReadClick}
+              />
+            }
           />
         </Routes>
       </div>

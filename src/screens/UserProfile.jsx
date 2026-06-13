@@ -58,7 +58,6 @@ const UserProfile = () => {
       const token = localStorage.getItem("token");
       const previousState = userData.is_following;
 
-      // تحديث الواجهة مباشرة
       setUserData(prev => ({ ...prev, is_following: !previousState }));
 
       if (previousState) {
@@ -67,12 +66,11 @@ const UserProfile = () => {
         });
       } else {
         await axios.post(`http://localhost:8000/api/follow/${userId}`, {}, {
-  headers: { Authorization: `Bearer ${token}` }
-});
+          headers: { Authorization: `Bearer ${token}` }
+        });
       }
 
     } catch (error) {
-      // إعادة الحالة إذا فشل الطلب
       setUserData(prev => ({ ...prev, is_following: !prev.is_following }));
       alert("حدث خطأ أثناء محاولة المتابعة");
     }
@@ -81,59 +79,113 @@ const UserProfile = () => {
   return (
     <Box sx={{ direction: "rtl", bgcolor: "#EFEDE1", minHeight: "100vh" }}>
 
-      {/* الغلاف */}
+      {/* 🖼️ الغلاف التراثي الجديد مع التعتيم والحد الذهبي */}
       <Box
         sx={{
-          height: 180,
-          background: `linear-gradient(45deg, ${mainColor}, #6d0f2b)`
+          height: 380, // تم رفعه ليتناسق مع الانحناء
+          backgroundImage: `url(/images/header-bg.jpg)`, 
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          position: 'relative', 
+          width: '100%',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(66, 11, 31, 0.3)', // طبقة التعتيم البرغندية
+            zIndex: 1
+          }
+        }}
+      >
+        {/* 🌊 المنحنى الانسيابي والخط الذهبي السحري */}
+        <Box
+          component="svg"
+          viewBox="0 0 1440 320"
+          preserveAspectRatio="none"
+          sx={{
+            position: 'absolute',
+            bottom: -2,
+            left: 0,
+            width: '100%',
+            height: '110px', 
+            zIndex: 2, 
+          }}
+        >
+          {/* المنحنى الأساسي باللون البيج المطابق تماماً لصفحتكِ */}
+          <path
+            fill="#EFEDE1" 
+            fillOpacity="1"
+            d="M0,224L120,208C240,192,480,160,720,176C960,192,1200,256,1320,288L1440,320L1440,320L1320,320C1200,320,960,320,720,320C480,320,240,320,120,320L0,320Z"
+          ></path>
+
+          {/* الخط الذهبي المحاكي للأناقة الأدبية */}
+          <path
+            d="M0,224L120,208C240,192,480,160,720,176C960,192,1200,256,1320,288L1440,320"
+            fill="none"
+            stroke="#D4AF37" 
+            strokeWidth="5" 
+            strokeLinecap="round"
+          ></path>
+        </Box>
+      </Box>
+
+      {/* محتوى كرت الحساب الشخصي */}
+    {/* محتوى كرت الحساب الشخصي */}
+<Container maxWidth="md">
+  <Paper
+    sx={{
+      mt: -30, // 💡 التعديل السحري هنا: زدنا السحب السالب ليرتفع الكرت بالكامل فوق المنحنى
+      p: 4,
+      borderRadius: 4,
+      boxShadow: "0 10px 30px rgba(0,0,0,0.12)", // جعلنا الظل أعمق قليلاً ليظهر الارتفاع بشكل أجمل
+      backgroundColor: "#EFEDE1",
+      textAlign: "center",
+      position: "relative",
+      zIndex: 3 
+    }}
+  >
+
+    {/* الصورة + الاسم */}
+    <Box sx={{ textAlign: "center", mb: 3 }}>
+      <Avatar
+        src={encodeURI(userData?.profile_img)}
+        sx={{
+          width: 130,
+          height: 130,
+          mx: "auto",
+          mb: 2,
+          border: `4px solid ${mainColor}`,
+          boxShadow: '0px 8px 20px rgba(0,0,0,0.15)'
         }}
       />
 
-      <Container maxWidth="md">
-        <Paper
-          sx={{
-            mt: -8,
-            p: 4,
-            borderRadius: 4,
-            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-            backgroundColor: "#EFEDE1",
-            textAlign: "center"
-          }}
-        >
+      <Typography
+        variant="h5"
+        sx={{
+          fontFamily: "Cairo",
+          fontWeight: "bold",
+          color: mainColor
+        }}
+      >
+        {userData?.name}
+      </Typography>
 
-          {/* الصورة + الاسم */}
-          <Box sx={{ textAlign: "center", mb: 3 }}>
-            <Avatar
-              src={encodeURI(userData?.profile_img)}
-              sx={{
-                width: 130,
-                height: 130,
-                mx: "auto",
-                mb: 2,
-                border: `4px solid ${mainColor}`,
-              }}
-            />
+      <Typography
+        sx={{
+          color: mainColor,
+          fontFamily: "Cairo"
+        }}
+      >
+        {userData?.nickname}
+      </Typography>
+    </Box>
 
-            <Typography
-              variant="h5"
-              sx={{
-                fontFamily: "Cairo",
-                fontWeight: "bold",
-                color: mainColor
-              }}
-            >
-              {userData?.name}
-            </Typography>
-
-            <Typography
-              sx={{
-                color: mainColor,
-                fontFamily: "Cairo"
-              }}
-            >
-              {userData?.nickname}
-            </Typography>
-          </Box>
+    {/* بقية الإحصائيات والأزرار كما هي دون تغيير... */}
 
           {/* الإحصائيات */}
           <Box
@@ -146,24 +198,24 @@ const UserProfile = () => {
             }}
           >
             <Box sx={{ textAlign: "center" }}>
-              <Typography variant="h5" fontWeight="bold">
+              <Typography variant="h5" fontWeight="bold" sx={{ fontFamily: "Cairo" }}>
                 {userData?.stats?.want_to_read_count}
               </Typography>
-              <Typography>يريد قراءتها</Typography>
+              <Typography sx={{ fontFamily: "Cairo" }}>يريد قراءتها</Typography>
             </Box>
 
             <Box sx={{ textAlign: "center" }}>
-              <Typography variant="h5" fontWeight="bold">
+              <Typography variant="h5" fontWeight="bold" sx={{ fontFamily: "Cairo" }}>
                 {userData?.stats?.reading_now_count}
               </Typography>
-              <Typography>يقرأ الآن</Typography>
+              <Typography sx={{ fontFamily: "Cairo" }}>يقرأ الآن</Typography>
             </Box>
 
             <Box sx={{ textAlign: "center" }}>
-              <Typography variant="h5" fontWeight="bold">
+              <Typography variant="h5" fontWeight="bold" sx={{ fontFamily: "Cairo" }}>
                 {userData?.stats?.finished_count}
               </Typography>
-              <Typography>أنهى</Typography>
+              <Typography sx={{ fontFamily: "Cairo" }}>أنهى</Typography>
             </Box>
           </Box>
 
@@ -179,7 +231,8 @@ const UserProfile = () => {
                 border: "none",
                 cursor: "pointer",
                 fontFamily: "Cairo",
-                fontSize: "1rem"
+                fontSize: "1rem",
+                transition: "all 0.3s ease"
               }}
             >
               {userData?.is_following ? "إلغاء المتابعة" : "متابعة"}

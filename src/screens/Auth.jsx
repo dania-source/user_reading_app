@@ -31,7 +31,7 @@ const Auth = ({ onSuccess, onClose }) => {
     setProfileImg(e.target.files[0]);
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
@@ -59,7 +59,32 @@ const Auth = ({ onSuccess, onClose }) => {
       });
 
       if (response.data.success || response.status === 200) {
-        localStorage.setItem("token", response.data.data.token);
+        const responseData = response.data.data;
+
+        // 1. تخزين التوكن
+        localStorage.setItem("token", responseData.token);
+
+        // 2. استخراج وتخزين الـ ID
+        const userId = responseData.user_id || responseData.id || (responseData.user && responseData.user.id);
+        if (userId) {
+          localStorage.setItem("user_id", String(userId).trim());
+        }
+
+        // 3. استخراج وتخزين الاسم
+        const userName = responseData.user_name || responseData.name || (responseData.user && responseData.user.name);
+        if (userName) {
+          localStorage.setItem("user_name", String(userName).trim());
+        }
+
+        // 4. 🔥 [التعديل الجديد] استخراج وتخزين رابط الصورة الشخصية
+        // يفحص كافة الاحتمالات لرجوع الصورة من السيرفر (profile_img أو avatar أو داخل كائن user)
+        const userImg = responseData.profile_img || responseData.avatar || (responseData.user && (responseData.user.profile_img || responseData.user.avatar));
+        if (userImg) {
+          // تأكد إذا كان السيرفر يعيد الرابط كاملاً، أو يحتاج إضافة رابط السيرفر الأساسي مثل: http://localhost:8000/storage/
+          const fullImageUrl = userImg.startsWith('http') ? userImg : `http://localhost:8000/${userImg}`;
+          localStorage.setItem("user_image", fullImageUrl.trim());
+        }
+
         if (onSuccess) onSuccess(); 
       }
     } catch (error) {
@@ -67,7 +92,7 @@ const Auth = ({ onSuccess, onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
+};
 
   const mainColor = "#541029";
   const gradientBg = "linear-gradient(135deg, #541029 0%, #821c3e 100%)";
