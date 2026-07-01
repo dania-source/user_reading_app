@@ -1,25 +1,73 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Paper, Typography, Rating, CardMedia, Button, Dialog, Chip } from '@mui/material';
+import { Box, Paper, Typography, Rating, CardMedia, Button, Dialog, Chip, Snackbar, Alert } from '@mui/material'; 
 import PersonIcon from '@mui/icons-material/Person';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer'; 
 import Auth from '../../screens/Auth';
 
-const BookInfo = ({ selectedBook, mainColor, handleReadClick }) => {
+const BookInfo = ({ selectedBook, mainColor, handleReadClick, onPayClick }) => {
   const [openAuthPopup, setOpenAuthPopup] = useState(false);
+  
+  // 🌟 تعديل الـ State ليتناسب مع أي نوع رسالة (تحذير أو تنبيه قفل)
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'warning' });
 
-  const onReadButtonClick = () => {
-    const userId = localStorage.getItem('user_id');
-    if (userId) {
-      if (handleReadClick && selectedBook) {
-        handleReadClick(selectedBook.pdf_path);
-      }
+  // دالة مساعدة لفحص حالة قفل الكتاب ومحتواه
+  const isBookLocked = selectedBook && !selectedBook.pdf_path;
+  const isPaidBook = selectedBook?.price && Number(selectedBook.price) > 0;
+
+  // دالة موحدة لإظهار رسالة التنبيه بناءً على نوع القفل
+  const showLockMessage = () => {
+    if (isPaidBook) {
+      setToast({
+        open: true,
+        message: "عذراً، هذا الكتاب مدفوع. يرجى فتح الكتاب أولاً لتتمكن من التفاعل معه (التقييم، التعليق، الإضافة).",
+        severity: 'info'
+      });
     } else {
-      setOpenAuthPopup(true);
+      setToast({
+        open: true,
+        message: selectedBook.lock_message || "هذا الكتاب مقفل حالياً، يرجى استيفاء الشروط لفتحه لتبدأ بالتفاعل معه.",
+        severity: 'warning'
+      });
     }
   };
 
-  // 🏷️ قراءة الاسم المطابق تماماً للباكيند المتوفر لديك
+  const onReadButtonClick = () => {
+    const userId = localStorage.getItem('user_id');
+    
+    if (!userId) {
+      setOpenAuthPopup(true);
+      return;
+    }
+
+    if (selectedBook) {
+      if (isBookLocked) {
+        // 1️⃣ إذا كان الكتاب مدفوعاً وله سعر حقيقي في الباكيند
+        if (isPaidBook) {
+          if (onPayClick) onPayClick(); 
+        } 
+        // 2️⃣ إذا كان كتاب مشروط
+        else {
+          setToast({
+            open: true,
+            message: selectedBook.lock_message || "هذا الكتاب مقفل حالياً، يرجى استيفاء الشروط لفتحه.",
+            severity: 'warning'
+          });
+        }
+        return;
+      }
+
+      if (handleReadClick) {
+        handleReadClick(selectedBook.pdf_path);
+      }
+    }
+  };
+
+  const handleCloseToast = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setToast({ ...toast, open: false });
+  };
+
   const categories = selectedBook?.geners || selectedBook?.genres || [];
 
   return (
@@ -55,10 +103,20 @@ const BookInfo = ({ selectedBook, mainColor, handleReadClick }) => {
             {selectedBook?.author}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Rating value={Number(selectedBook?.average_rating) || 0} readOnly precision={0.5} size="small" />
+
+        {/* 🌟 تعديل قسم التقييم: إذا كان مغلقاً وضغط عليه المستخدم تظهر الرسالة التوضيحية */}
+        <Box 
+          onClick={isBookLocked ? showLockMessage : undefined}
+          sx={{ display: 'flex', alignItems: 'center', gap: 1, direction: 'ltr', cursor: isBookLocked ? 'pointer' : 'default' }}
+        >
+          <Rating 
+            value={selectedBook?.average_rating ? Number(Number(selectedBook.average_rating).toFixed(1)) : 0} 
+            readOnly 
+            precision={0.1} 
+            size="small" 
+          />
           <Typography variant="body2" sx={{ fontFamily: 'Cairo', fontWeight: 700, color: '#ffb400', mt: 0.2 }}>
-            {selectedBook?.average_rating || "0.0"}
+            {selectedBook?.average_rating ? Number(selectedBook.average_rating).toFixed(1) : "0.0"}
           </Typography>
         </Box>
       </Box>
@@ -70,23 +128,17 @@ const BookInfo = ({ selectedBook, mainColor, handleReadClick }) => {
         </Typography>
       </Box>
 
-      {/* 🏷️ قسم التصنيفات الجديد والمحاذي لليمين تماماً تحت الوصف */}
+      {/* 🏷️ قسم التصنيفات */}
       {categories.length > 0 && (
         <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 1, flexWrap: 'wrap', mb: 3, px: 1, direction: 'rtl' }}>
           <LocalOfferIcon sx={{ fontSize: '1rem', color: '#888', ml: 1 }} />
           {categories.map((category, index) => (
             <Chip 
               key={index}
-              // هنا نستخرج الـ name مباشرة لأن التصنيف قادم كـ Object من الباكيند
               label={typeof category === 'object' ? category.name : category} 
               sx={{
-                fontFamily: 'Cairo',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                bgcolor: '#eadecd', 
-                color: '#541029',   
-                border: '1px solid #dcd1be',
-                borderRadius: '8px',
+                fontFamily: 'Cairo', fontWeight: 600, fontSize: '0.85rem',
+                bgcolor: '#eadecd', color: '#541029', border: '1px solid #dcd1be', borderRadius: '8px',
                 '&:hover': { bgcolor: '#dfd3be' }
               }}
             />
@@ -99,7 +151,7 @@ const BookInfo = ({ selectedBook, mainColor, handleReadClick }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#666' }}>
           <MenuBookIcon sx={{ fontSize: '1.2rem', color: mainColor }} />
           <Typography variant="body2" sx={{ fontFamily: 'Cairo', fontWeight: 600 }}>
-            عدد الصفحات: {selectedBook?.pages || "غير مححدد"}
+            عدد الصفحات: {selectedBook?.pages || "غير محدد"}
           </Typography>
         </Box>
         
@@ -107,17 +159,24 @@ const BookInfo = ({ selectedBook, mainColor, handleReadClick }) => {
           variant="contained" 
           onClick={onReadButtonClick}
           sx={{ 
-            bgcolor: mainColor, fontFamily: 'Cairo', fontWeight: 700, borderRadius: '50px', px: 5, py: 1.2, transition: 'all 0.3s',
-            '&:hover': { bgcolor: mainColor, opacity: 0.95, transform: 'scale(1.03)' },
-            boxShadow: `0 0 0 0 rgba(84, 16, 41, 0.4)`, animation: 'pulse 2s infinite',
+            bgcolor: !isBookLocked ? mainColor : '#888', 
+            fontFamily: 'Cairo', 
+            fontWeight: 700, 
+            borderRadius: '50px', 
+            px: 5, 
+            py: 1.2, 
+            transition: 'all 0.3s',
+            '&:hover': { bgcolor: !isBookLocked ? mainColor : '#777', opacity: 0.95, transform: 'scale(1.03)' },
+            boxShadow: `0 0 0 0 rgba(84, 16, 41, 0.4)`, 
+            animation: !isBookLocked ? 'pulse 2s infinite' : 'none',
             '@keyframes pulse': { '0%': { boxShadow: `0 0 0 0 rgba(84, 16, 41, 0.4)` }, '70%': { boxShadow: `0 0 0 12px rgba(84, 16, 41, 0)` }, '100%': { boxShadow: `0 0 0 0 rgba(84, 16, 41, 0)` } }
           }}
         >
-          ابدأ قراءة الكتاب الآن
+          {!isBookLocked ? "ابدأ قراءة الكتاب الآن" : isPaidBook ? "🔒 شراء الكتاب المقفل" : "🔒 فتح الكتاب المشروط"}
         </Button>
       </Box>
 
-      {/* 🌟 نافذة الـ Popup العائمة */}
+      {/* 🌟 نافذة الـ Popup العائمة للـ Auth */}
       <Dialog 
         open={openAuthPopup} 
         onClose={() => setOpenAuthPopup(false)}
@@ -133,6 +192,23 @@ const BookInfo = ({ selectedBook, mainColor, handleReadClick }) => {
           }} 
         />
       </Dialog>
+
+      {/* 🌟 رسالة الـ Snackbar الذكية والموحدة */}
+      <Snackbar 
+        open={toast.open} 
+        autoHideDuration={5000} 
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} 
+      >
+        <Alert 
+          onClose={handleCloseToast} 
+          severity={toast.severity} 
+          variant="filled"
+          sx={{ width: '100%', fontFamily: 'Cairo', borderRadius: '10px' }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
 
     </Paper>
   );

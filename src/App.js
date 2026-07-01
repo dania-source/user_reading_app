@@ -13,6 +13,7 @@ function App() {
   });
 
   useEffect(() => {
+    
     const savedUser = localStorage.getItem("user");
     if (savedUser && !user) {
       setUser(JSON.parse(savedUser));

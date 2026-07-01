@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Paper, Typography, Rating, TextField, Button, Dialog, Avatar } from '@mui/material'; // 👈 أضفنا Avatar هنا
 import Auth from '../../screens/Auth';
-
+import PersonIcon from '@mui/icons-material/Person';
 const AddCommentForm = ({ userRating, commentText, setCommentText, mainColor, handleRatingChange, handleAddComment }) => {
   // 🚪 حالة للتحكم بفتح وإغلاق نافذة تسجيل الدخول العائمة
   const [openAuthPopup, setOpenAuthPopup] = useState(false);
@@ -18,35 +18,37 @@ const AddCommentForm = ({ userRating, commentText, setCommentText, mainColor, ha
       
       {/* 👤 ترويسة النموذج: تحتوي على الصورة والعنوان */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <Avatar 
-          src={isLoggedIn ? userImage : ''} // يعرض الصورة لو مسجل، أو أول حرف لو مش مسجل أو الصورة مش موجودة
+       <Avatar 
+          src={isLoggedIn && userImage ? userImage : undefined} // نمرر undefined إذا لم تتوفر صورة ليقوم بعرض الـ Children (الأيقونة)
           alt={userName}
           sx={{ 
-            width: 45, 
-            height: 45, 
+            width: 50, 
+            height: 50, 
             border: `2px solid ${mainColor}`,
-            bgcolor: mainColor, // لون خلفية افتراضي في حال عدم وجود صورة
-            fontFamily: 'Cairo'
+            bgcolor: '#BDBDBD', // 🎨 لون الخلفية الرمادي الافتراضي للمستخدم (مثل الصورة تماماً)
           }}
         >
-          {/* حل بديل: إذا لم تتوفر صورة، يظهر أول حرف من اسمه */}
-          {userName.charAt(0).toUpperCase()}
+          {/* الأيقونة البيضاء الافتراضية بحجم مناسب ومتناسق داخل الدائرة */}
+          <PersonIcon sx={{ fontSize: 35, color: '#ffffff' }} />
         </Avatar>
-        
         <Typography variant="subtitle2" sx={{ fontFamily: 'Cairo', fontWeight: 700, color: '#1a1a1a' }}>
           {isLoggedIn ? `مرحباً ${userName}، شارك القراء انطباعك:` : 'شارك القراء انطباعك:'}
         </Typography>
       </Box>
       
       {/* التقييم بالنجوم */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, opacity: isLoggedIn ? 1 : 0.6 }}>
-        <Typography variant="body2" sx={{ fontFamily: 'Cairo', color: '#555' }}>تقييمك الشخصي:</Typography>
-        <Rating 
-          value={userRating} 
-          onChange={(event, newValue) => handleRatingChange(newValue)} 
-          disabled={!isLoggedIn} // 🔒 يتم قفله إذا لم يسجل دخول
-        />
-      </Box>
+<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, opacity: isLoggedIn ? 1 : 0.6 }}>
+  <Typography variant="body2" sx={{ fontFamily: 'Cairo', color: '#555' }}>تقييمك الشخصي:</Typography>
+  
+  {/* أضفنا dir="ltr" لتصحيح اتجاه النجوم وضمان تفاعلها بشكل صحيح */}
+  <Box dir="ltr">
+    <Rating 
+      value={userRating} 
+      onChange={(event, newValue) => handleRatingChange(newValue)} 
+      disabled={!isLoggedIn} // 🔒 يتم قفله إذا لم يسجل دخول
+    />
+  </Box>
+</Box>
 
       {/* حقل نص التعليق */}
       <TextField

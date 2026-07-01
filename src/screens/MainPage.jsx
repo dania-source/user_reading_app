@@ -1,123 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Container, Grid, CircularProgress, Typography, Modal, Fade, Button } from '@mui/material';
 import axios from 'axios';
-import Waves from './Waves';
-import Auth from './Auth';
+import { useNavigate } from 'react-router-dom';
+
+// استيراد المكونات من نفس المجلد الحالي
 import Navbar from './Navbar'; 
 import BookCard from './BookCard';
-import { useNavigate } from 'react-router-dom';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/pagination';
-
-const MagicParticles = () => {
-  const canvasRef = React.useRef(null);
-
-  React.useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let animationFrameId;
-
-    const resizeCanvas = () => {
-      const parent = canvas.parentElement;
-      if (parent) {
-        canvas.width = parent.offsetWidth;
-        canvas.height = parent.offsetHeight;
-      }
-    };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    const particlesArray = [];
-    const mouse = { x: null, y: null };
-
-    const handleMouseMove = (event) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = event.clientX - rect.left;
-      mouse.y = event.clientY - rect.top;
-      for (let i = 0; i < 2; i++) {
-        particlesArray.push(new Particle(mouse.x, mouse.y));
-      }
-    };
-
-    const handleMouseLeave = () => {
-      mouse.x = null;
-      mouse.y = null;
-    };
-
-    canvas.parentElement.addEventListener('mousemove', handleMouseMove);
-    canvas.parentElement.addEventListener('mouseleave', handleMouseLeave);
-
-    class Particle {
-      constructor(x, y) {
-        this.x = x || Math.random() * canvas.width;
-        this.y = y || Math.random() * canvas.height;
-        this.size = Math.random() * 3 + 1;
-        this.speedX = Math.random() * 1.5 - 0.75;
-        this.speedY = Math.random() * -1.5 - 0.2; 
-        this.color = `rgba(255, 255, 255, ${Math.random() * 0.4 + 0.2})`;
-      }
-      update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        if (this.size > 0.1) this.size -= 0.01;
-      }
-      draw() {
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    const init = () => {
-      if (particlesArray.length < 60) {
-        particlesArray.push(new Particle());
-      }
-    };
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      init();
-      for (let i = 0; i < particlesArray.length; i++) {
-        particlesArray[i].update();
-        particlesArray[i].draw();
-        if (particlesArray[i].size <= 0.1 || particlesArray[i].y < 0) {
-          particlesArray.splice(i, 1);
-          i--;
-          }
-      }
-      animationFrameId = requestAnimationFrame(animate);
-    };
-    animate();
-
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (canvas.parentElement) {
-        canvas.parentElement.removeEventListener('mousemove', handleMouseMove);
-        canvas.parentElement.removeEventListener('mouseleave', handleMouseLeave);
-      }
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none', 
-        zIndex: 1,
-      }}
-    />
-  );
-};
+import Auth from './Auth';
+import HeroSection from './HeroSection';
+import LeaderboardSection from './LeaderboardSection';
 
 const MainPage = () => {
   const mainColor = '#541029';
@@ -137,26 +28,7 @@ const MainPage = () => {
   const currentUserId = user?.id || user?.user_id; 
   const navigate = useNavigate();
 
-  const slidesData = [
-    {
-      title: "انطلِق في تحدي العمر",
-      desc: "في منصة جَليس، القراءة ليست مجرد هواية، بل هي رحلة مليئة بالتحديات والمغامرات الشيّقة بين صفحات الكتب. ابدأ كتابك الأول اليوم!",
-      image: "/images/reading_girl_cartoon.png"
-    },
-    {
-      title: "تسيّد جدول المتصدرين",
-      desc: "نافِس قُرّاء العالم العربي، اجمع النقاط مع كل صفحة تقلبها، واعتلِ صدارة القائمة لتثبت للجميع أنك القارئ الأفضل في نخبة القراء.",
-      image: "/images/thinking_girl_cartoon.png"
-    },
-    {
-      title: "اكسب ألقاباً تليق بشغفك",
-      desc: "من 'قارئ مبتدئ' إلى 'الحكيم' و'المثقف اللامع'؛ حوّل قراءاتك إلى ألقاب وإنجازات تفتخر بها. كل كتاب تقرأه يمنحك وِساماً جديداً!",
-      image: "/images/waving_girl_cartoon.png"
-    }
-  ];
-
   // --- Functions ---
-
   const fetchUserData = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -205,10 +77,8 @@ const MainPage = () => {
     }
   }, []);
 
-  // 🔄 🌟 الـ useEffect الموحد والمحمي من التضارب (تم تجميع جلب البيانات والاسترجاع هنا)
   useEffect(() => {
     const initPageData = async () => {
-      // 1. جلب المفضلة، المستخدم، ولوحة الصدارة أولاً بشكل مستقل
       fetchUserData();
       fetchLeaderboard();
 
@@ -226,7 +96,6 @@ const MainPage = () => {
         }
       }
 
-      // 2. 🔍 التحقق من وجود بحث مخزن في الذاكرة لمنع مسحه بعد الرجوع
       const savedQuery = sessionStorage.getItem('last_search_query');
       const savedResults = sessionStorage.getItem('last_search_results');
 
@@ -235,7 +104,6 @@ const MainPage = () => {
         setBooks(JSON.parse(savedResults));
         setLoading(false);
 
-        // سكرول فوري إلى قسم الكتب ليبقى المستخدم في نفس المكان
         setTimeout(() => {
           const booksSection = document.getElementById('books-section');
           if (booksSection) {
@@ -243,56 +111,92 @@ const MainPage = () => {
           }
         }, 100);
       } else {
-        // إذا لم يكن هناك بحث سابق، نجلب الكتب الافتراضية
         fetchBooks();
       }
     };
 
     initPageData();
   }, [fetchBooks, fetchUserData, fetchLeaderboard]);
+const handleSearch = async (e) => {
+  const value = e.target.value;
+  setSearchQuery(value);
 
-  // 🔍 تحسين دالة البحث لحفظ الكلمات والنتائج في الـ Session تلقائياً فورياً
-  const handleSearch = async (e) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-
-    if (value.trim().length > 0) {
-      const booksSection = document.getElementById('books-section');
-      if (booksSection) {
-        booksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+  // 1. التمرير التلقائي لقسم الكتب عند بدء الكتابة
+  if (value.trim().length > 0) {
+    const booksSection = document.getElementById('books-section');
+    if (booksSection) {
+      booksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  }
 
-    if (value.trim() === '') {
-      sessionStorage.removeItem('last_search_query');
-      sessionStorage.removeItem('last_search_results');
-      fetchBooks();
-      return;
+  // 2. إذا تم مسح مربع البحث، احذف التخزين المؤقت وأعد جلب كل الكتب
+  if (value.trim() === '') {
+    sessionStorage.removeItem('last_search_query');
+    sessionStorage.removeItem('last_search_results');
+    fetchBooks(); 
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('token');
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
+    // 3. جلب كل الكتب من الرابط المتوفر بالباك إند
+    const response = await axios.get(
+      `http://localhost:8000/api/books`, 
+      config
+    );
+
+    if (response.data.success) {
+      const allBooks = response.data.data;
+      const query = value.toLowerCase().trim();
+      
+      // 4. الفلترة الفائقة (اسم، كاتب، تصنيف، ونوع الوصول)
+      const filtered = allBooks.filter(book => {
+        // أ. فحص العنوان والمؤلف
+        const matchesTitle = book.title && book.title.toLowerCase().includes(query);
+        const matchesAuthor = book.author && book.author.toLowerCase().includes(query);
+        
+        // ب. فحص التصنيفات
+        const matchesGenre = book.geners && book.geners.some(gener => 
+          gener.name && gener.name.toLowerCase().includes(query)
+        );
+
+        // ج. فحص نوع الوصول (مجاني، مدفوع، مشروط، تجريبي) بناءً على الكلمة المكتوبة
+        let matchesAccess = false;
+        if (book.access_type) {
+          const accessType = book.access_type.toLowerCase();
+          
+          if (query === 'مجاني' || query === 'مجاني الاصلي' || query === 'free') {
+            matchesAccess = accessType === 'free';
+          } else if (query === 'مدفوع' || query === 'paid') {
+            matchesAccess = accessType === 'paid' || accessType === 'مدفوع'; 
+          } else if (query === 'مشروط' || query === 'شرط') {
+            // إذا كان الوصول مشروط بعدد كتب معينة
+            matchesAccess = accessType === 'conditional' || book.required_books_read > 0;
+          } else if (query === 'تجريبي' || query === 'trial') {
+            matchesAccess = accessType === 'trial';
+          } else {
+            // فحص عادي إذا كتب جزء من الكلمة المخرنة في السيرفر
+            matchesAccess = accessType.includes(query);
+          }
+        }
+
+        // إرجاع الكتاب إذا تطابق مع أي شرط من الشروط الأربعة
+        return matchesTitle || matchesAuthor || matchesGenre || matchesAccess;
+      });
+
+      // 5. تحديث قائمة الكتب المعروضة وحفظها مؤقتاً
+      setBooks(filtered);
+      sessionStorage.setItem('last_search_query', value);
+      sessionStorage.setItem('last_search_results', JSON.stringify(filtered));
     }
-
-    try {
-      const token = localStorage.getItem('token');
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-      const response = await axios.get(
-        `http://localhost:8000/api/books/search?query=${value}`,
-        config
-      );
-
-      if (response.data.success) {
-        setBooks(response.data.data);
-        // 💾 تخزين القيمة والنتائج عند نجاح عملية البحث لضمان بقائها عند العودة
-        sessionStorage.setItem('last_search_query', value);
-        sessionStorage.setItem('last_search_results', JSON.stringify(response.data.data));
-      }
-    } catch (error) {
-      console.error("خطأ في البحث:", error);
-    }
-  };
-
+  } catch (error) {
+    console.error("خطأ في الفلترة الشاملة:", error);
+  }
+};
   const handleToggleFavorite = async (bookId) => {
     const token = localStorage.getItem('token');
-    
     if (!token) {
       setOpenAuthModal(true);
       return;
@@ -337,252 +241,28 @@ const MainPage = () => {
         mainColor={mainColor} 
       />
 
-      <Box
-        id="home-section"
-        sx={{
-          position: 'relative',
-          background: `linear-gradient(-45deg, ${mainColor}, #821c3e, #5a1228, #3b0a18)`,
-          backgroundSize: '400% 400%',
-          animation: 'gradientAnimation 12s ease infinite',
-          pt: { xs: 8, md: 12 }, 
-          pb: { xs: 18, md: 22 }, 
-          textAlign: 'center',
-          color: 'white',
-          overflow: 'hidden',
-          cursor: 'grab',
-          '&:active': { cursor: 'grabbing' },
-          '@keyframes gradientAnimation': {
-            '0%': { backgroundPosition: '0% 50%' },
-            '50%': { backgroundPosition: '100% 50%' },
-            '100%': { backgroundPosition: '0% 50%' },
-          },
-          '& .swiper-pagination-bullet': {
-            background: '#FFF',
-            opacity: 0.4,
-            width: '10px',
-            height: '10px',
-            transition: 'all 0.3s ease',
-          },
-          '& .swiper-pagination-bullet-active': {
-            background: '#F3C5C7',
-            width: '24px',
-            borderRadius: '5px',
-            opacity: 1,
-          },
-          '& .swiper-pagination': {
-            bottom: '60px !important', 
-            zIndex: 10,
-          }
-        }}
-      >
-        <MagicParticles />
+      {/* 1. استدعاء قسم السلايدر الترحيبي */}
+      <HeroSection mainColor={mainColor} />
 
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, animation: 'fadeInUp 1.2s ease-out forwards' }}>
-          <Swiper
-            modules={[Pagination, Autoplay]}
-            spaceBetween={0}
-            slidesPerView={1}
-            pagination={{ clickable: true }}
-            autoplay={{ delay: 5000, disableOnInteraction: false }}
-            loop={true}
-            style={{ width: '100%' }}
-          >
-            {slidesData.map((slide, index) => (
-              <SwiperSlide key={index}>
-                <Grid container sx={{ alignItems: 'center', justifyContent: 'space-between', direction: 'rtl', minHeight: '400px' }}>
-                  
-                  <Grid item xs={12} md={6} sx={{ textAlign: 'right' }}>
-                    <Box sx={{ p: { xs: 2, md: 0 }, transform: { xs: 'none', md: 'translateY(-70px)' }, transition: 'transform 0.3s ease' }}>
-                      <Typography
-                        variant="h1"
-                        fontWeight="900"
-                        sx={{
-                          fontFamily: 'Cairo, sans-serif',
-                          mb: 2, 
-                          fontSize: { xs: '2.2rem', md: '3.8rem' },
-                          background: 'linear-gradient(45deg, #FFF 30%, #F3C5C7 90%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        {slide.title}
-                      </Typography>
+      {/* 2. استدعاء قسم لوحة المتصدرين */}
+      <LeaderboardSection 
+        leaderboard={leaderboard}
+        token={token}
+        currentUserId={currentUserId}
+        navigate={navigate}
+        mainColor={mainColor}
+      />
 
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontFamily: 'Cairo, sans-serif',
-                          opacity: 0.9,
-                          lineHeight: 1.8,
-                          fontSize: { xs: '1rem', md: '1.25rem' },
-                          color: '#F5F5F7',
-                          maxWidth: '500px', 
-                          marginRight: 0,
-                          marginLeft: 'auto'
-                        }}
-                      >
-                        {slide.desc}
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={12} md={5} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' }, alignItems: 'center' }}>
-                    <Box
-                      component="img"
-                      src={slide.image} 
-                      alt={slide.title}
-                      sx={{
-                        width: '100%',
-                        maxWidth: { xs: '220px', md: '350px' }, 
-                        height: 'auto',
-                        transition: 'transform 0.3s ease',
-                        '&:hover': { transform: 'scale(1.05)' },
-                        transform: index === 0 ? { md: 'translateX(-20px)' } : 'none',
-                      }}
-                    />
-                  </Grid>
-
-                </Grid>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </Container>
-
-        <Waves />
-      </Box>
-
-      <Container id="leaderboard-section" sx={{ mt: 10, mb: 10 }}>
-        <Typography variant="h4" sx={{ fontFamily: 'Cairo', textAlign: 'center', mb: 10, color: mainColor, fontWeight: 'bold' }}>
-            نخبة القراء
-        </Typography>
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 2, maxWidth: '800px', mx: 'auto', mb: 2 }}>
-            {leaderboard.slice(0, 3).map((userItem, index) => { 
-                const orders = [2, 1, 3]; 
-                const isFirst = index === 0;
-                const userId = userItem.id || userItem.user_id;
-                const isMyProfile = currentUserId && userId && String(currentUserId) === String(userId);
-
-                const handleProfileNavigation = () => {
-                    if (!token) return;
-                    if (isMyProfile) {
-                        navigate('/profile'); 
-                    } else {
-                        navigate(`/user-profile/${userId}`);
-                    }
-                };
-
-                return (
-                    <Box key={index} sx={{ 
-                        order: orders[index],
-                        flex: 1, 
-                        bgcolor: 'white', 
-                        p: isFirst ? 4 : 2, 
-                        borderRadius: 4, 
-                        textAlign: 'center',
-                        position: 'relative',
-                        mb: isFirst ? 5 : 0, 
-                        boxShadow: isFirst ? '0 15px 35px rgba(84, 16, 41, 0.15)' : '0 4px 12px rgba(0,0,0,0.03)',
-                        border: isFirst ? `2px solid ${mainColor}` : '1px solid #eee',
-                        zIndex: isFirst ? 2 : 1
-                    }}>
-                        <Box sx={{ 
-                            position: 'absolute', top: -15, left: '50%', transform: 'translateX(-50%)',
-                            bgcolor: isFirst ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32',
-                            color: 'white', px: 1.5, py: 0.3, borderRadius: 5, fontSize: '0.7rem', fontWeight: 'bold', whiteSpace: 'nowrap'
-                        }}>
-                            المركز {index + 1}
-                        </Box>
-
-                        <Typography 
-                            component="div"
-                            onClick={handleProfileNavigation} 
-                            sx={{ 
-                                fontFamily: 'Cairo', 
-                                fontWeight: 'bold', 
-                                fontSize: isFirst ? '1rem' : '0.8rem', 
-                                mt: 1, 
-                                display: 'block', 
-                                color: 'inherit',
-                                cursor: token ? 'pointer' : 'default',
-                                '&:hover': { color: token ? mainColor : 'inherit' },
-                            }}
-                        >
-                            {userItem.name} {isMyProfile && " (أنت)"}
-                        </Typography>
-
-                        <Typography sx={{ fontFamily: 'Cairo', fontSize: '0.7rem', color: 'gray', mb: 1 }}>
-                            {userItem.nickname}
-                        </Typography>
-                        <Typography sx={{ fontWeight: 'bold', color: mainColor, fontSize: isFirst ? '1.2rem' : '1rem' }}>
-                            {userItem.books_read} <small style={{fontSize: '0.6rem'}}>كتاب</small>
-                        </Typography>
-                    </Box>
-                );
-            })}
-        </Box>
-
-        <Box sx={{ maxWidth: '850px', mx: 'auto', bgcolor: 'white', borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', overflow: 'hidden' }}>
-            {leaderboard.slice(3, 10).map((userItem, index) => {
-                const userId = userItem.id || userItem.user_id;
-                const isMyProfile = currentUserId && userId && String(currentUserId) === String(userId);
-
-                const handleProfileNavigation = () => {
-                    if (!token) return;
-                    if (isMyProfile) {
-                        navigate('/profile'); 
-                    } else {
-                        navigate(`/user-profile/${userId}`);
-                    }
-                };
-
-                return (
-                    <Box 
-                        key={index} 
-                        component="div"
-                        onClick={handleProfileNavigation}
-                        sx={{ 
-                            display: 'flex', 
-                            color: 'inherit',
-                            cursor: token ? 'pointer' : 'default',
-                            justifyContent: 'space-between', 
-                            alignItems: 'center', 
-                            p: 2, 
-                            borderBottom: '1px solid #f5f5f5',
-                            '&:hover': { bgcolor: token ? '#fafafa' : 'white' }
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Typography sx={{ color: '#ccc', fontWeight: 'bold', width: 25 }}>{index + 4}</Typography>
-                            <Box > 
-                                <Typography sx={{ fontFamily: 'Cairo', fontSize: '0.9rem', fontWeight: 500 }}>
-                                    {userItem.name} {isMyProfile && " (أنت)"}
-                                </Typography>
-                                <Typography sx={{ fontFamily: 'Cairo', fontSize: '0.7rem', color: 'gray' }}>{userItem.nickname}</Typography>
-                            </Box>
-                        </Box>
-                        <Typography sx={{ fontFamily: 'Cairo', fontWeight: 'bold', color: mainColor, fontSize: '0.9rem' }}>
-                            {userItem.books_read} كتاب
-                        </Typography>
-                    </Box>
-                );
-            })}
-        </Box>
-
-        {!token && (
-            <Typography sx={{ fontFamily: 'Cairo', textAlign: 'center', mt: 3, color: 'gray', fontSize: '0.9rem' }}>
-                سجل دخولك لتتمكن من تصفح حسابات القراء ومتابعتهم
-            </Typography>
-        )}
-      </Container>
-
+      {/* 3. قسم المكتبة الرقمية */}
       <Container id="books-section" sx={{ mt: 5, position: 'relative', zIndex: 5, pb: 10 }}>
         <Typography variant="h4" sx={{ fontFamily: 'Cairo', textAlign: 'center', mb: 4, color: mainColor, fontWeight: 'bold' }}>
           المكتبة الرقمية
         </Typography>
         
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress sx={{ color: mainColor }} /></Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+            <CircularProgress sx={{ color: mainColor }} />
+          </Box>
         ) : (
           <>
             <Grid container spacing={3} sx={{ p: 2 }}>
@@ -615,6 +295,7 @@ const MainPage = () => {
         )}
       </Container>
 
+      {/* مودال تسجيل الدخول */}
       <Modal open={openAuthModal} onClose={() => setOpenAuthModal(false)}>
         <Fade in={openAuthModal}>
           <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: { xs: '90%', md: '750px' }, bgcolor: 'background.paper', borderRadius: 4, overflow: 'hidden', outline: 'none' }}>

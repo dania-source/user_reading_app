@@ -1,10 +1,25 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // استيراد التوجيه
-import { Grid, Card, CardMedia, CardContent, Typography, Box, Button, IconButton } from '@mui/material';
-import { Favorite, FavoriteBorder } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { Grid, Card, CardMedia, CardContent, Typography, Box, Button, IconButton, Chip } from '@mui/material';
+import { Favorite, FavoriteBorder, Lock, AttachMoney, AutoStories, CardGiftcard } from '@mui/icons-material';
 
 const BookCard = ({ book, onToggleFavorite, isFavorite, mainColor }) => {
-  const navigate = useNavigate(); // خطاف التنقل
+  const navigate = useNavigate();
+
+  // دالة لمساعدة في عرض نوع الوصول بشكل منسق واحترافي
+  const renderAccessBadge = () => {
+    switch (book.access_type) {
+      case 'paid': // أو حسب القيمة النصية المرسلة من الباك إيند لـ مدفوع
+        return <Chip icon={<Lock style={{ color: '#fff', fontSize: 16 }} />} label={`مدفوع: ${book.price}$`} sx={{ bgcolor: '#e65100', color: '#fff', fontFamily: 'Cairo', fontWeight: 'bold' }} size="small" />;
+      case 'trial': // تجريبي
+        return <Chip icon={<AutoStories style={{ color: '#fff', fontSize: 16 }} />} label={`تجريبي (${book.trial_pages} صفحة)`} sx={{ bgcolor: '#0288d1', color: '#fff', fontFamily: 'Cairo' }} size="small" />;
+      case 'conditional': // مشروط بعدد كتب منهية
+        return <Chip icon={<Lock style={{ color: '#fff', fontSize: 16 }} />} label={`يتطلب قراءة ${book.required_books_read} كتب`} sx={{ bgcolor: '#7b1fa2', color: '#fff', fontFamily: 'Cairo' }} size="small" />;
+      case 'free':
+      default: // مجاني
+        return <Chip icon={<CardGiftcard style={{ color: '#fff', fontSize: 16 }} />} label="مجاني" sx={{ bgcolor: '#2e7d32', color: '#fff', fontFamily: 'Cairo' }} size="small" />;
+    }
+  };
 
   return (
     <Grid item xs={12} sm={6} md={3}>
@@ -14,7 +29,12 @@ const BookCard = ({ book, onToggleFavorite, isFavorite, mainColor }) => {
         '&:hover': { transform: 'translateY(-8px)', boxShadow: '0 12px 24px rgba(0,0,0,0.1)' } 
       }}>
         
-        {/* زر المفضلة */}
+        {/* شارة نوع الوصول (أعلى اليسار) */}
+        <Box sx={{ position: 'absolute', top: 10, left: 10, zIndex: 2 }}>
+          {renderAccessBadge()}
+        </Box>
+
+        {/* زر المفضلة (أعلى اليمين) */}
         <IconButton 
           onClick={(e) => {
             e.stopPropagation(); 
@@ -42,16 +62,14 @@ const BookCard = ({ book, onToggleFavorite, isFavorite, mainColor }) => {
         </CardContent>
 
         <Box sx={{ p: 2, pt: 0 }}>
-          {/* هنا التعديل الأساسي: نستخدم navigate للانتقال بدلاً من الدالة القديمة */}
           <Button 
-  fullWidth 
-  variant="contained" 
-  // قمنا بتعديل الـ navigate ليرسل بيانات الكتاب كاملة مع الانتقال
-  onClick={() => navigate(`/book/${book.id}`, { state: { book } })} 
-  sx={{ bgcolor: mainColor, fontFamily: 'Cairo', borderRadius: 1.5, '&:hover': { bgcolor: '#3d0b1e' } }}
->
-  تفاصيل الكتاب
-</Button>
+            fullWidth 
+            variant="contained" 
+            onClick={() => navigate(`/book/${book.id}`, { state: { book } })} 
+            sx={{ bgcolor: mainColor, fontFamily: 'Cairo', borderRadius: 1.5, '&:hover': { bgcolor: '#3d0b1e' } }}
+          >
+            تفاصيل الكتاب
+          </Button>
         </Box>
       </Card>
     </Grid>

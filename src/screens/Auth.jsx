@@ -134,7 +134,7 @@ const handleSubmit = async (e) => {
           <MenuBook sx={{ fontSize: 80, mb: 2, opacity: 0.9 }} />
         </motion.div>
         <Typography variant="h4" fontWeight="800" sx={{ fontFamily: "Cairo" }}>
-          {isLogin ? "مرحباً بك!" : "انضم إلينا"}
+          {isLogin ? "مرحباً بك" : "انضم إلينا"}
         </Typography>
         <Typography variant="body2" sx={{ opacity: 0.8, mt: 2, maxWidth: 200, fontFamily: "Cairo", lineHeight: 1.6 }}>
           {isLogin ? "سجل دخولك لتكمل رحلتك في عالم الكتب." : "ابدأ بتنظيم قراءاتك وبناء مكتبتك الخاصة اليوم."}
